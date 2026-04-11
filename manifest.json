@@ -1,0 +1,38 @@
+{
+  "id": "https://portfo.plus/",
+  "name": "Portfo.plus - سبد سرمایه‌گذاری هوشمند",
+  "short_name": "Portfo.plus",
+  "description": "پلتفرم مدیریت سبد سرمایه‌گذاری هوشمند",
+  "start_url": "https://portfo.plus/app/home",
+  "scope": "https://portfo.plus/",
+  "display": "standalone",
+  "background_color": "#0B0F1B",
+  "theme_color": "#0B0F1B",
+  "dir": "rtl",
+  "lang": "fa",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "https://josephyas.github.io/portfoplus/icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "https://josephyas.github.io/portfoplus/icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    },
+    {
+      "src": "https://josephyas.github.io/portfoplus/icons/icon-maskable-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "https://josephyas.github.io/portfoplus/icons/icon-maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}
