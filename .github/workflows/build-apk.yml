@@ -33,7 +33,7 @@ jobs:
         run: |
           mkdir -p twa-build
           bubblewrap init \
-            --manifest=https://josephyas.github.io/portfoplus/manifest.json \
+            --manifest=https://josephyas.github.io/portfoplus-apk-builder/manifest.json \
             --directory=twa-build \
             --skipPwaValidation
 
