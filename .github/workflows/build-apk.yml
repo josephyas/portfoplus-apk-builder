@@ -32,7 +32,8 @@ jobs:
           bubblewrap init \
             --manifest=https://josephyas.github.io/portfoplus/manifest.json \
             --directory=twa-build \
-            --skipPwaValidation
+            --skipPwaValidation \
+            --jdkPath="$JAVA_HOME"
 
       - name: Build APK
         working-directory: twa-build
