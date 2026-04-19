@@ -24,32 +24,47 @@ jobs:
       - name: Install Bubblewrap
         run: npm install -g @bubblewrap/cli
 
-      - name: Pre-configure Bubblewrap (skip JDK prompt)
+      - name: Pre-configure Bubblewrap (skip JDK/SDK prompts)
         run: |
           mkdir -p ~/.bubblewrap
           echo "{\"jdkPath\":\"$JAVA_HOME\",\"androidSdkPath\":\"$HOME/.bubblewrap/android_sdk\"}" > ~/.bubblewrap/config.json
 
-      - name: Initialize TWA project
-        run: |
-          mkdir -p twa-build
-          bubblewrap init \
-            --manifest=https://josephyas.github.io/portfoplus-apk-builder/manifest.json \
-            --directory=twa-build \
-            --skipPwaValidation
-
       - name: Decode keystore
         run: echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 -d > /tmp/portfoplus.keystore
+
+      - name: Initialize TWA project (non-interactive)
+        run: |
+          mkdir -p twa-build
+          # Pipe answers to all bubblewrap init prompts:
+          # 1. Domain: portfo.plus
+          # 2. URL path: /app/home
+          # 3. App name
+          # 4. Short name
+          # 5. App ID
+          # 6. Version code: 1
+          # 7. Display: standalone (default)
+          # 8. Orientation: portrait (default)
+          # 9. Status bar color: #0B0F1B
+          # 10. Splash color: #0B0F1B
+          # 11. Icon URL (default from manifest)
+          # 12. Maskable icon URL (default)
+          # 13. Monochrome icon URL
+          # 14. Play Billing: No
+          # 15. Geolocation: No
+          # 16. Keystore path
+          # 17. Key alias
+          printf 'portfo.plus\n/app/home\nPortfo.plus\nPortfo.plus\nplus.portfo.twa\n1\n\n\n#0B0F1B\n#0B0F1B\n\n\n\nN\nN\n/tmp/portfoplus.keystore\nportfoplus\n' \
+            | bubblewrap init \
+                --manifest=https://josephyas.github.io/portfoplus-apk-builder/manifest.json \
+                --directory=twa-build \
+                --skipPwaValidation
 
       - name: Build APK
         working-directory: twa-build
         env:
           BUBBLEWRAP_KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
           BUBBLEWRAP_KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
-        run: |
-          bubblewrap build \
-            --signingKeyPath=/tmp/portfoplus.keystore \
-            --signingKeyAlias=portfoplus \
-            --skipPwaValidation
+        run: bubblewrap build --skipPwaValidation
 
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
