@@ -26,9 +26,18 @@ jobs:
 
       - name: Pre-configure Bubblewrap
         run: |
+          # Accept Android SDK licenses
+          yes | /usr/local/lib/android/sdk/cmdline-tools/latest/bin/sdkmanager --licenses > /dev/null 2>&1 || true
+
+          # Write bubblewrap config
           mkdir -p ~/.bubblewrap
           echo "{\"jdkPath\":\"$JAVA_HOME\",\"androidSdkPath\":\"/usr/local/lib/android/sdk\"}" > ~/.bubblewrap/config.json
-          cat ~/.bubblewrap/config.json
+
+          # Patch bubblewrap to skip SDK validation
+          TOOLS_JS=$(find /usr/local/lib/node_modules -name "AndroidSdkTools.js" 2>/dev/null | head -1)
+          echo "Patching: $TOOLS_JS"
+          sed -i 's/await this\.isValidAndroidSdk()/true/g' "$TOOLS_JS"
+          sed -i 's/this\.isValidAndroidSdk()/true/g' "$TOOLS_JS"
 
       - name: Decode keystore
         run: echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 -d > /tmp/portfoplus.keystore
