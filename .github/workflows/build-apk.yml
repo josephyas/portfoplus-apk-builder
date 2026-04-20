@@ -24,18 +24,16 @@ jobs:
       - name: Install Bubblewrap
         run: npm install -g @bubblewrap/cli
 
-      - name: Debug Android SDK
-        run: |
-          echo "ANDROID_SDK_ROOT=$ANDROID_SDK_ROOT"
-          echo "ANDROID_HOME=$ANDROID_HOME"
-          ls $ANDROID_SDK_ROOT || echo "ANDROID_SDK_ROOT not found"
-          ls $ANDROID_HOME || echo "ANDROID_HOME not found"
-
       - name: Pre-configure Bubblewrap
         run: |
+          # Bubblewrap requires cmdline-tools/latest — create symlink if needed
+          CMDLINE_TOOLS="$ANDROID_SDK_ROOT/cmdline-tools"
+          if [ ! -d "$CMDLINE_TOOLS/latest" ]; then
+            VERSIONED=$(ls "$CMDLINE_TOOLS" | head -1)
+            ln -s "$CMDLINE_TOOLS/$VERSIONED" "$CMDLINE_TOOLS/latest"
+          fi
           mkdir -p ~/.bubblewrap
           echo "{\"jdkPath\":\"$JAVA_HOME\",\"androidSdkPath\":\"$ANDROID_SDK_ROOT\"}" > ~/.bubblewrap/config.json
-          cat ~/.bubblewrap/config.json
 
       - name: Decode keystore
         run: echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 -d > /tmp/portfoplus.keystore
