@@ -48,7 +48,21 @@ jobs:
         env:
           BUBBLEWRAP_KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
           BUBBLEWRAP_KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
-        run: printf "Y\n1.0.0\n1\n" | bubblewrap build --skipPwaValidation
+        run: |
+          which expect || sudo apt-get install -y expect
+          cat > /tmp/build.exp << 'EOF'
+          set timeout -1
+          spawn bubblewrap build --skipPwaValidation
+          expect {
+            "(Y/n)" { send "Y\r"; exp_continue }
+            "versionName" { send "1.0.0\r"; exp_continue }
+            "versionCode" { send "1\r"; exp_continue }
+            eof
+          }
+          catch wait result
+          exit [lindex $result 3]
+          EOF
+          expect /tmp/build.exp
 
       - name: Find APK
         run: find . -name "*.apk" -o -name "*.aab" 2>/dev/null
