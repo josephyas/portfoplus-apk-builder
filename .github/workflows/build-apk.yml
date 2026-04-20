@@ -26,14 +26,27 @@ jobs:
 
       - name: Pre-configure Bubblewrap
         run: |
-          # Bubblewrap requires cmdline-tools/latest — create symlink if needed
-          CMDLINE_TOOLS="$ANDROID_SDK_ROOT/cmdline-tools"
+          echo "=== cmdline-tools contents ==="
+          ls -la /usr/local/lib/android/sdk/cmdline-tools/
+          echo "=== build-tools contents ==="
+          ls -la /usr/local/lib/android/sdk/build-tools/
+          echo "=== checking sdkmanager ==="
+          find /usr/local/lib/android/sdk/cmdline-tools -name "sdkmanager" 2>/dev/null
+
+          # Create cmdline-tools/latest symlink if needed
+          CMDLINE_TOOLS="/usr/local/lib/android/sdk/cmdline-tools"
           if [ ! -d "$CMDLINE_TOOLS/latest" ]; then
             VERSIONED=$(ls "$CMDLINE_TOOLS" | head -1)
+            echo "Creating symlink: $VERSIONED -> latest"
             ln -s "$CMDLINE_TOOLS/$VERSIONED" "$CMDLINE_TOOLS/latest"
+          else
+            echo "cmdline-tools/latest already exists"
+            ls "$CMDLINE_TOOLS/latest/bin/"
           fi
+
           mkdir -p ~/.bubblewrap
-          echo "{\"jdkPath\":\"$JAVA_HOME\",\"androidSdkPath\":\"$ANDROID_SDK_ROOT\"}" > ~/.bubblewrap/config.json
+          echo "{\"jdkPath\":\"$JAVA_HOME\",\"androidSdkPath\":\"/usr/local/lib/android/sdk\"}" > ~/.bubblewrap/config.json
+          cat ~/.bubblewrap/config.json
 
       - name: Decode keystore
         run: echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 -d > /tmp/portfoplus.keystore
