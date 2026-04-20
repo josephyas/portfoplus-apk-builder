@@ -26,19 +26,9 @@ jobs:
 
       - name: Pre-configure Bubblewrap
         run: |
-          # Test sdkmanager works
-          echo "=== sdkmanager version ==="
-          JAVA_HOME=$JAVA_HOME /usr/local/lib/android/sdk/cmdline-tools/latest/bin/sdkmanager --version || echo "sdkmanager failed"
-
-          # Find exact validation code
-          echo "=== finding validation ==="
-          grep -r "androidSdk isn't correct" $(npm root -g)/ 2>/dev/null
-          echo "=== validation logic ==="
-          grep -r "isValidAndroidSdk\|validateSdk\|androidSdkPath" \
-            $(npm root -g)/@bubblewrap/cli/node_modules/@bubblewrap/core/dist/ 2>/dev/null | head -40
-
           mkdir -p ~/.bubblewrap
           echo "{\"jdkPath\":\"$JAVA_HOME\",\"androidSdkPath\":\"/usr/local/lib/android/sdk\"}" > ~/.bubblewrap/config.json
+          cat ~/.bubblewrap/config.json
 
       - name: Decode keystore
         run: echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 -d > /tmp/portfoplus.keystore
