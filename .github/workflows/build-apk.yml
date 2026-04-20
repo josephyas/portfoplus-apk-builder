@@ -67,7 +67,7 @@ jobs:
           set timeout -1
           spawn bubblewrap build --skipPwaValidation
           expect {
-            "(Y/n)" { send "Y\r"; exp_continue }
+            "regenerate" { send "Y\r"; exp_continue }
             "versionName" { send "1.0.0\r"; exp_continue }
             "versionCode" { send "1\r"; exp_continue }
             eof

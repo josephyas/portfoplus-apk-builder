@@ -31,6 +31,6 @@
   "isChromeOSOnly": false,
   "isMetaQuest": false,
   "fullScopeUrl": "https://portfo.plus/",
-  "minSdkVersion": 19,
+  "minSdkVersion": 21,
   "fingerprints": []
 }
