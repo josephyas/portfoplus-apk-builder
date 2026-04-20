@@ -33,14 +33,11 @@ jobs:
           mkdir -p ~/.bubblewrap
           echo "{\"jdkPath\":\"$JAVA_HOME\",\"androidSdkPath\":\"/usr/local/lib/android/sdk\"}" > ~/.bubblewrap/config.json
 
-          # Patch bubblewrap to skip SDK validation
+          # Show actual validation code to find right patch pattern
           NPM_GLOBAL=$(npm root -g)
-          echo "npm global: $NPM_GLOBAL"
           TOOLS_JS=$(find "$NPM_GLOBAL" -name "AndroidSdkTools.js" 2>/dev/null | head -1)
-          echo "Patching: $TOOLS_JS"
-          sed -i 's/await this\.isValidAndroidSdk()/true/g' "$TOOLS_JS"
-          sed -i 's/this\.isValidAndroidSdk()/true/g' "$TOOLS_JS"
-          echo "Patch done"
+          echo "=== validation-related lines ==="
+          grep -n "isValid\|androidSdk\|isn.*correct\|correct\|validateSdk" "$TOOLS_JS" | head -20
 
       - name: Decode keystore
         run: echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 -d > /tmp/portfoplus.keystore
