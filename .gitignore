@@ -1,0 +1,24 @@
+# Signing material. Losing portfoplus.keystore means never being able to update
+# plus.portfo.twa on Cafe Bazaar again — back it up somewhere durable. Committing
+# it is just as bad in the other direction.
+*.keystore
+*.jks
+keystore.properties
+
+# Local SDK paths
+local.properties
+
+# Build output
+build/
+app/build/
+.gradle/
+*.apk
+*.aab
+*.idsig
+
+# Bubblewrap regenerates this on every preBuild from twaManifest.shortcuts
+app/src/main/res/xml/shortcuts.xml
+
+# Editor / OS
+.idea/
+.DS_Store

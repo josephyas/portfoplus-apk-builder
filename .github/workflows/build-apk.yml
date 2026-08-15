@@ -44,18 +44,39 @@ jobs:
       - name: Install Android SDK components
         run: |
           SDKMANAGER=/usr/local/lib/android/sdk/cmdline-tools/latest/bin/sdkmanager
+          # Must cover compileSdkVersion 36 / targetSdkVersion 35 from app/build.gradle.
           yes | $SDKMANAGER \
+            "build-tools;35.0.0" \
             "build-tools;34.0.0" \
-            "build-tools;33.0.2" \
-            "build-tools;33.0.1" \
-            "platforms;android-34" \
-            "platforms;android-33" \
+            "platforms;android-36" \
+            "platforms;android-35" \
             "platform-tools" > /dev/null 2>&1 || true
           echo "Installed build-tools:"
           ls /usr/local/lib/android/sdk/build-tools/
 
       - name: Decode keystore
         run: echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 -d > /tmp/portfoplus.keystore
+
+      # twa-manifest.json points signingKey.path at the local checkout for local
+      # builds; in CI the keystore is decoded to /tmp instead.
+      - name: Point signing key at the CI keystore
+        run: |
+          node -e '
+            const fs = require("fs");
+            const m = JSON.parse(fs.readFileSync("twa-manifest.json", "utf8"));
+            m.signingKey.path = "/tmp/portfoplus.keystore";
+            fs.writeFileSync("twa-manifest.json", JSON.stringify(m, null, 2));
+          '
+
+      # Bubblewrap regenerates app/ from twa-manifest.json, wiping the AdTrace
+      # launcher, the AD_ID permission and the R8 keep rules. Regenerate on
+      # purpose here, then put them back — never answer "Y" to a regenerate
+      # prompt without re-running apply.mjs afterwards.
+      - name: Regenerate Android project
+        run: bubblewrap update --skipVersionUpgrade
+
+      - name: Apply native customizations
+        run: node twa-customizations/apply.mjs
 
       - name: Build APK
         env:
@@ -67,15 +88,27 @@ jobs:
           set timeout -1
           spawn bubblewrap build --skipPwaValidation
           expect {
-            "regenerate" { send "Y\r"; exp_continue }
-            "versionName" { send "1.0.0\r"; exp_continue }
-            "versionCode" { send "1\r"; exp_continue }
+            # N, not Y: regeneration already happened above, and doing it here
+            # would drop every customization from the previous step.
+            "regenerate" { send "N\r"; exp_continue }
             eof
           }
           catch wait result
           exit [lindex $result 3]
           EOF
           expect /tmp/build.exp
+
+      # Fail loudly rather than shipping an APK that silently lost the handoff.
+      - name: Verify the APK carries the GAID handoff
+        run: |
+          APK=$(find . -name "app-release-signed.apk" | head -1)
+          echo "Verifying $APK"
+          BT=$(ls -d /usr/local/lib/android/sdk/build-tools/* | sort -V | tail -1)
+          "$BT/aapt2" dump badging "$APK" | grep -q "com.google.android.gms.permission.AD_ID" \
+            || { echo "::error::AD_ID permission missing — customizations were not applied"; exit 1; }
+          unzip -p "$APK" classes.dex | strings | grep -q "gps_adid" \
+            || { echo "::error::gps_adid stripped by R8 — check proguard-rules.pro"; exit 1; }
+          echo "OK: AD_ID permission present and gps_adid survived R8"
 
       - name: Debug - show generated project on failure
         if: failure()
